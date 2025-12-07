@@ -15,14 +15,44 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.db import connections
+from django.db.utils import OperationalError
+from django.http import JsonResponse
+from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def health_view(request):
+    db_ok = False
+    db_error = None
+
+    try:
+        connection = connections["default"]
+        connection.cursor()
+        db_ok = True
+    except OperationalError as exc:
+        db_error = str(exc)
+
+    data = {
+        "status": "ok" if db_ok else "degraded",
+        "database": {
+            "ok": db_ok,
+            "error": db_error,
+        },
+    }
+    return JsonResponse(data, status=200 if db_ok else 503)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/health/', health_view, name='health'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/smart/', include('apps.smartqueue.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
