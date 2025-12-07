@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.db import connections
 from django.db.utils import OperationalError
 from django.http import JsonResponse
-from django.urls import path
+from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -52,6 +52,7 @@ urlpatterns = [
     path('api/health/', health_view, name='health'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/smart/', include('apps.smartqueue.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
