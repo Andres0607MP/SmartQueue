@@ -41,3 +41,11 @@ class ServiceListCreateView(generics.ListCreateAPIView):
 
     filter_backends = [DjangoFilterBackend]
     filterset_class = ServiceFilter
+class ServiceListCreateView(generics.ListCreateAPIView):
+    """
+    get:
+        Lista todos los servicios con filtros avanzados.
+
+    post:
+        Crea un nuevo servicio.
+    """
