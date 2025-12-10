@@ -55,6 +55,5 @@ urlpatterns = [
     path('api/smart/', include('apps.smartqueue.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/queueo/', include('apps.queueo.urls')),
     path('api/users/', include('apps.users.urls')),
 ]
