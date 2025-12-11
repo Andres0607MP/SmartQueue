@@ -35,7 +35,8 @@ class QueueTicketViewSet(viewsets.ModelViewSet):
                 {"detalle": "Ya tienes un ticket pendiente para este servicio."}
             )
 
-        serializer.save(usuario=usuario)
+        estado = serializer.validated_data.get("estado", "PENDIENTE")
+        serializer.save(usuario=usuario, estado=estado)
 
     @action(detail=False, methods=["post"], url_path="create-ticket")
     def create_ticket(self, request):
@@ -55,7 +56,8 @@ class QueueTicketViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        ticket = serializer.save(usuario=usuario)
+        estado = serializer.validated_data.get("estado", "PENDIENTE")
+        ticket = serializer.save(usuario=usuario, estado=estado) 
         return Response(QueueTicketSerializer(ticket).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"], url_path="cancel")
@@ -73,10 +75,12 @@ class QueueTicketViewSet(viewsets.ModelViewSet):
 
         return Response({"detalle": "Ticket cancelado correctamente."})
 
+
     @action(detail=False, methods=["get"], url_path="user/history")
     def user_history(self, request):
         usuario = request.user
         tickets = QueueTicket.objects.filter(usuario=usuario).order_by("-hora_estimada")
         serializer = QueueTicketSerializer(tickets, many=True)
         return Response(serializer.data)
+
 
