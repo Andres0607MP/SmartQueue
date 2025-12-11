@@ -1,0 +1,13 @@
+# Entornos virtuales
+.venv/
+
+# Archivos de entorno
+.env
+
+# Archivos de Django
+__pycache__/
+*.pyc
+*.py[cod]
+
+# Otros
+*.log
