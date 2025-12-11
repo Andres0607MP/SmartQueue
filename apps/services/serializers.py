@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from users.models import Profile
+from apps.users.models import Profile
 from .models import Service
 
 
