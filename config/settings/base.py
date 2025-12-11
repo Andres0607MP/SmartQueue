@@ -29,7 +29,8 @@ INSTALLED_APPS = [
     'drf_spectacular',
 
     'apps.smartqueue',
-    'apps.services'
+    'apps.services',
+    'apps.queue_app',
 ]
 
 
