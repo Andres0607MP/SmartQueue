@@ -3,31 +3,25 @@ from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_sche
 
 service_list_docs = extend_schema(
     summary="Listado de servicios",
-    description="Lista servicios con filtros por nombre, categoría y duración.",
+    description="Lista servicios con filtros avanzados por nombre, duración y categoría.",
     parameters=[
         OpenApiParameter(
-            name="name",
+            name="name__icontains",
             description="Filtrar por nombre (icontains)",
             required=False,
             type=str,
         ),
         OpenApiParameter(
+            name="estimated_time__lte",
+            description="Filtrar por duración estimada máxima (minutos)",
+            required=False,
+            type=int,
+        ),
+        OpenApiParameter(
             name="category",
-            description="Filtrar por categoría (icontains)",
+            description="Filtrar por categoría (coincidencia exacta)",
             required=False,
             type=str,
-        ),
-        OpenApiParameter(
-            name="duration_gte",
-            description="Duración mínima (minutos)",
-            required=False,
-            type=int,
-        ),
-        OpenApiParameter(
-            name="duration_lte",
-            description="Duración máxima (minutos)",
-            required=False,
-            type=int,
         ),
     ],
 )
