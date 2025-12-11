@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'django_filters',
 
     'apps.smartqueue',
+    'apps.users',
     'apps.services',
     'apps.queue_app',
 ]
