@@ -62,9 +62,9 @@ class QueueTicketViewSet(viewsets.ModelViewSet):
     def cancel_ticket(self, request, pk=None):
         ticket = self.get_object()
 
-        if ticket.estado == "ATENDIDO":
+        if ticket.estado in ["ATENDIDO", "FINALIZADO" ,"CANCELADO"]:
             return Response(
-                {"detalle": "No puedes cancelar un ticket atendido."},
+                {"detalle": "No puedes cancelar un ticket ya atendido, finalizado o cancelado."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

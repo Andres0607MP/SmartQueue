@@ -6,6 +6,8 @@ class QueueTicket(models.Model):
         ('PENDIENTE', 'Pendiente'),
         ('EN_CURSO', 'En curso'),
         ('FINALIZADO', 'Finalizado'),
+        ('CANCELADO', 'Cancelado'),
+        ('ATENDIDO', 'Atendido'),
     ]
 
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
