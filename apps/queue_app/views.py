@@ -2,6 +2,9 @@ from rest_framework import viewsets, permissions, serializers
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import QueueTicket
 from .serializers import QueueTicketSerializer
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status
 
 class QueueTicketViewSet(viewsets.ModelViewSet):
     queryset = QueueTicket.objects.all()
@@ -10,7 +13,6 @@ class QueueTicketViewSet(viewsets.ModelViewSet):
     # solo usuarios autenticados
     permission_classes = [permissions.IsAuthenticated]
 
-    # filtros habilitados usando django-filter
     filter_backends = [DjangoFilterBackend]
     filterset_fields = {
         "servicio": ["exact"],
@@ -34,3 +36,47 @@ class QueueTicketViewSet(viewsets.ModelViewSet):
             )
 
         serializer.save(usuario=usuario)
+
+    @action(detail=False, methods=["post"], url_path="create-ticket")
+    def create_ticket(self, request):
+        usuario = request.user
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        servicio = serializer.validated_data.get("servicio")
+
+        if QueueTicket.objects.filter(
+            usuario=usuario,
+            servicio=servicio,
+            estado="PENDIENTE"
+        ).exists():
+            return Response(
+                {"detalle": "Ya tienes un ticket pendiente para este servicio."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        ticket = serializer.save(usuario=usuario)
+        return Response(QueueTicketSerializer(ticket).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"], url_path="cancel")
+    def cancel_ticket(self, request, pk=None):
+        ticket = self.get_object()
+
+        if ticket.estado == "ATENDIDO":
+            return Response(
+                {"detalle": "No puedes cancelar un ticket atendido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        ticket.estado = "CANCELADO"
+        ticket.save()
+
+        return Response({"detalle": "Ticket cancelado correctamente."})
+
+    @action(detail=False, methods=["get"], url_path="user/history")
+    def user_history(self, request):
+        usuario = request.user
+        tickets = QueueTicket.objects.filter(usuario=usuario).order_by("-hora_estimada")
+        serializer = QueueTicketSerializer(tickets, many=True)
+        return Response(serializer.data)
+
