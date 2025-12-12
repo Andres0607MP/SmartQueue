@@ -93,3 +93,139 @@ Colaboración y trabajo en equipo
 
 Este README se irá ampliando con la arquitectura detallada, modelos, endpoints principales y guía de despliegue a medida que el proyecto avance.
 
+---
+
+**Resumen rápido / Qué hay en este repo**
+- `config/` : configuraciones de entorno (`base.py`, `dev.py`, `prod.py`) y URLs globales.
+- `apps/` : aplicaciones del dominio (`users`, `services`, `queue_app`, `smartqueue`).
+- `.env.example` : ejemplo de variables de entorno (no editar, copiar a `.env` para desarrollo local).
+- `requirements.txt` / `requirements-dev.txt` : dependencias.
+
+**Estado importante (antes de ejecutar)**
+- El proyecto define `prod` y `dev` de forma separada. `manage.py` por defecto apunta a `config.settings.prod` (seguridad: evita arrancar en `DEBUG=True` si alguien clona y ejecuta por defecto).
+- Nunca subas tu `.env` al repositorio. `/.gitignore` ya incluye `.env`.
+- Si copias `.env.example` a `.env`, revisa `DJANGO_DEBUG` y pon `False` para producción.
+
+---
+
+**Instalación (desarrollo)**
+1. Crear y activar un entorno virtual (recomendado):
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+2. Instalar dependencias:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+3. Crear `.env` a partir del ejemplo y editar valores (BD, SECRET_KEY):
+
+```bash
+cp .env.example .env
+# editar .env con tu editor y ajustar variables
+```
+
+4. Migraciones y superuser (modo desarrollo):
+
+```bash
+python manage.py migrate --settings=config.settings.dev
+python manage.py createsuperuser --settings=config.settings.dev
+```
+
+5. Ejecutar servidor en modo desarrollo (explicitar settings dev):
+
+```bash
+python manage.py runserver --settings=config.settings.dev
+```
+
+---
+
+**Endpoints principales (rápido)**
+- Health check: `GET /api/health/`  — comprueba conexión a BD y devuelve 200/503.
+- Swagger/OpenAPI: `GET /swagger/` y `GET /api/schema/`.
+- JWT tokens: `POST /api/token/` (obtener access/refresh), `POST /api/token/refresh/`.
+
+Apps y rutas:
+- `users`: `/api/users/` (ViewSet), `/api/users/register/` (registro público), `/api/users/me/` (perfil autenticado).
+- `services`: `/api/services/` (CRUD + `/popular/`, `/{pk}/agents/`, `/{pk}/assign_agents/`).
+- `queue`: `/api/queue/tickets/` (CRUD + `/create-ticket/`, `/{pk}/cancel/`, `/user/history/`).
+- `smartqueue`: `/api/smart/simulate_assignment/` (simular) y `/api/smart/commit_assignment/` (persistir con `@transaction.atomic`).
+
+Ejemplos curl rápidos:
+
+1) Registro de usuario
+```bash
+curl -X POST "http://localhost:8000/api/users/register/" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"mario","email":"mario@example.com","password":"secret123"}'
+```
+
+2) Obtener token (login)
+```bash
+curl -X POST "http://localhost:8000/api/token/" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"mario","password":"secret123"}'
+```
+
+3) Crear ticket autenticado (usar `Authorization: Bearer <TOKEN>`)
+```bash
+curl -X POST "http://localhost:8000/api/queue/tickets/create-ticket/" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -d '{"servicio":"Atención","numero_turno":1,"prioridad":1,"hora_estimada":"2025-12-11T12:00:00Z"}'
+```
+
+---
+
+**Pruebas**
+- Ejecutar tests (recomendado usar `requirements-dev.txt`):
+
+```bash
+pytest --cov=apps --cov-report=term-missing
+```
+
+- El proyecto contiene tests en `apps/queue_app/tests.py`, `apps/users/tests.py`, `apps/smartqueue/tests.py`. Asegurate de alcanzar >=50% de coverage según la consigna.
+
+---
+
+**Producción / Despliegue**
+- Recomendado: Gunicorn (añadir a `requirements.txt`) o `uvicorn`+`gunicorn` para ASGI. Un ejemplo de `Procfile` (Render / Railway):
+
+```
+web: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+```
+
+- Variables de entorno obligatorias en producción: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=false`, `DJANGO_DB_*`.
+- Asegurate que la base de datos en la nube (PlanetScale, Supabase, Railway, etc.) esté configurada y el host/usuario/clave estén en las variables de entorno.
+- La API en producción debe responder `GET /api/health/` correctamente.
+
+---
+
+**Buenas prácticas y seguridad**
+- Nunca subir `.env` al repo público. Si lo hiciste, rota las credenciales inmediatamente.
+- `manage.py` se ha configurado para arrancar por defecto con `config.settings.prod` para minimizar el riesgo de arrancar accidentalmente en `DEBUG=True`.
+- Mantén `DEBUG=False` en producción siempre.
+
+---
+
+**Estructura del proyecto y dónde mirar**
+- `config/urls.py` : enrutamiento global y health check.
+- `config/settings/` : control de entornos.
+- `apps/users/` : modelos `Profile`, serializers, `RegisterView`, permisos personalizados.
+- `apps/services/` : `Service` (ManyToMany con usuarios), filtros y endpoints extra.
+- `apps/queue_app/` : `QueueTicket` (ForeignKey a `User`), reglas de negocio y endpoints personalizados.
+- `apps/smartqueue/` : motor de asignación (`simulate_assignment`, `commit_assignment` con `@transaction.atomic`).
+
+---
+
+Si querés, puedo:
+- Añadir ejemplos más detallados (Postman collection o OpenAPI export) — dime si lo querés.
+- Añadir instrucciones de despliegue automáticas (Dockerfile + Procfile) y un script CI básico que verifica `DEBUG=False` en `prod`.
+
+Contacto: abre un issue o asigname una tarea si querés que automatice alguno de los pasos.
+
+
