@@ -1,6 +1,7 @@
 from .base import *  # noqa
 import os
 import dj_database_url
+import urllib.parse
 
 DEBUG = False
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')
@@ -33,13 +34,29 @@ elif os.getenv('DATABASE_URL'):
         if fallback_name:
             parsed['NAME'] = fallback_name
 
-    # Mask password for safer logging
+    # Robustly try to recover the DB name if dj_database_url produced
+    # an unexpectedly short value (some provider UIs / exports can
+    # introduce truncation or formatting differences). We prefer the
+    # explicit path component from urlparse if it appears longer.
+    try:
+        url_parts = urllib.parse.urlparse(db_url)
+        path_name = (url_parts.path or '').lstrip('/')
+        parsed_name = parsed.get('NAME') or ''
+        if path_name and len(path_name) > len(parsed_name):
+            parsed['NAME'] = path_name
+    except Exception:
+        # keep the original parsed value if anything goes wrong
+        pass
+
+    # Mask password for safer logging using urlparse (handles scheme://user:pwd@host)
     def _mask_url(purl: str) -> str:
         try:
-            pre, post = purl.split('@', 1)
-            if ':' in pre:
-                user, pwd = pre.split(':', 1)
-                return f"{user}:***@{post}"
+            up = urllib.parse.urlparse(purl)
+            if up.username:
+                netloc = f"{up.username}:***@{up.hostname or ''}"
+                if up.port:
+                    netloc += f":{up.port}"
+                return urllib.parse.urlunparse((up.scheme, netloc, up.path or '', up.params or '', up.query or '', up.fragment or ''))
         except Exception:
             pass
         return purl
