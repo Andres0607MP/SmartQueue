@@ -119,6 +119,7 @@ source .venv/bin/activate
 2. Instalar dependencias:
 
 ```bash
+pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
@@ -142,6 +143,11 @@ python manage.py createsuperuser --settings=config.settings.dev
 python manage.py runserver --settings=config.settings.dev
 ```
 
+6. Ejecutar pruebas unitarias:
+
+```bash
+pytest --ds=config.settings.dev --cov=apps --cov-report=term-missing
+```
 ---
 
 **Endpoints principales (rápido)**
