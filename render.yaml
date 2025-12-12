@@ -6,7 +6,7 @@ services:
     startCommand: "bash start.sh"
     envVars:
       - key: DATABASE_URL
-        value: "mysql://smartqueuee_jumpswamme:1b93335bf5ce2439e43db1423098eedefeff9ef7@4drnk2.h.filess.io:61002/smartqueuee_jumpswamme"
+        value: "mariadb://smartqueue1_afraiddug:472cdbba0ad79339455d5829785c4e40a2418c51@k5kc-c.h.filess.io:3305/smartqueue1_afraiddug"
       - key: SKIP_MIGRATIONS
         value: "true"
     autoDeploy: true
