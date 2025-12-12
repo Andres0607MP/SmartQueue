@@ -236,3 +236,7 @@ web: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
 #Link despliege:
 https://smartqueue-mad3.onrender.com/swagger/
 
+
+
+#Link presentación:
+https://www.canva.com/design/DAG7ULbUnLI/QiblCBCUcquQgJblwtr1ZA/edit?utm_content=DAG7ULbUnLI&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
