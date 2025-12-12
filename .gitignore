@@ -4,6 +4,12 @@
 # Archivos de entorno
 .env
 
+# Coverage and test artifacts
+.coverage
+.coverage.*
+.pytest_cache/
+test_output.log
+
 # Archivos de Django
 __pycache__/
 *.pyc
