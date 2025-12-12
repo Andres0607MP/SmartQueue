@@ -6,7 +6,14 @@ if [ "${SKIP_MIGRATIONS:-}" = "true" ]; then
     echo "SKIP_MIGRATIONS=true — skipping migrations."
 else
     echo "Running Django migrations (prod settings)..."
-    python manage.py migrate --noinput --settings=config.settings.prod
+    # Run migrations but do not abort the whole start script if they fail.
+    # This prevents deploys from failing hard when the DB is temporarily
+    # inaccessible or credentials/permissions are not yet correct.
+    if python manage.py migrate --noinput --settings=config.settings.prod; then
+        echo "Migrations completed successfully."
+    else
+        echo "WARNING: migrations failed — continuing startup. Check logs for details." >&2
+    fi
 fi
 
 # Recoger archivos estáticos
