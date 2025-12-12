@@ -13,9 +13,10 @@ fi
 echo "Collecting static files..."
 python manage.py collectstatic --noinput --settings=config.settings.prod
 
-# Crear superusuario si no existe
-echo "Ensuring superuser exists..."
-python manage.py shell --settings=config.settings.prod <<'PY'
+# Crear superusuario si no existe — solo si CREATE_SUPERUSER_ON_START=true
+if [ "${CREATE_SUPERUSER_ON_START:-}" = "true" ]; then
+    echo "Ensuring superuser exists..."
+    python manage.py shell --settings=config.settings.prod <<'PY'
 import os
 from django.contrib.auth import get_user_model
 
@@ -25,11 +26,14 @@ email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@example.com')
 password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'admin')
 
 if not User.objects.filter(username=username).exists():
-    User.objects.create_superuser(username=username, email=email, password=password)
-    print('Created superuser:', username)
+        User.objects.create_superuser(username=username, email=email, password=password)
+        print('Created superuser:', username)
 else:
-    print('Superuser already exists:', username)
+        print('Superuser already exists:', username)
 PY
+else
+    echo "Skipping superuser creation (CREATE_SUPERUSER_ON_START not true)"
+fi
 
 # Iniciar Gunicorn usando el puerto correcto
 echo "Starting gunicorn..."
